@@ -14,6 +14,14 @@ from PIL import ImageTk,Image
 from chatterbot import ChatBot
 from chatterbot.trainers import ListTrainer
 
+import openai
+
+openai.api_key = "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"
+
+start_sequence = "\nAI:"
+restart_sequence = "\nHuman: "
+
+
 print('Say something...')
 r = sr.Recognizer()
 speaker = pyttsx3.init()
@@ -23,10 +31,10 @@ global questionField
 global textarea
 flag = 0
 
-file = "new_chat.txt"
-bot=ChatBot('Bot')
-trainer=ListTrainer(bot)
-trainer.train(file)
+##file = "new_chat.txt"
+##bot=ChatBot('Bot')
+##trainer=ListTrainer(bot)
+##trainer.train(file)
 
 def record_audio(ask = False):
 #user voice record
@@ -54,6 +62,19 @@ def nat_voice(audio_string):
         playsound.playsound(audio_file)
         print(audio_string)
         os.remove(audio_file)
+
+def chat(message):
+        response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt=message,
+        temperature=0.9,
+        max_tokens=150,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0.6,
+        stop=[" Human:", " AI:"]
+        )
+        return response.choices[0].text
 
 class Widget: #GUI OF VIRTUAL ASSISTAND AND COMMANDS GIVEN
         def __init__(self):
@@ -115,14 +136,14 @@ class Widget: #GUI OF VIRTUAL ASSISTAND AND COMMANDS GIVEN
                 nat_voice('How can i help you?')
                 root.mainloop()
                 flag = 1
-                
+
         def botReply(self):
                 print("I'm in.")
                 global questionField
                 question=questionField.get()
-                question=question.capitalize()
+##                question=question.capitalize()
                 print(question)
-                answer=bot.get_response(question)
+                answer=chat(question)
                 global textarea
                 textarea.insert(END,'You: '+question+'\n\n')
                 textarea.insert(END,'Bot: '+str(answer)+'\n\n')
@@ -162,25 +183,28 @@ class Widget: #GUI OF VIRTUAL ASSISTAND AND COMMANDS GIVEN
                 print("working...")
                 voice_data = record_audio()
                 voice_data = voice_data.lower()
-                if 'hello' in voice_data or 'hi' in voice_data:
-                        nat_voice('hi, there')
-                if 'who are you' in voice_data or 'name' in voice_data:
-                        nat_voice('My name is Natasha ')
-                if 'search' in voice_data:
-                        search = record_audio('What do you want to search?')
-                        if search is not None:
-                                url = 'https://google.com/search?q=' + search
-                                webbrowser.get().open(url)
-                                nat_voice('Here is what i found on google for ' + search)
-                        else:
-                                record_audio("Try Again")
-                if 'location' in voice_data:
-                        location = record_audio('What\'s the location to find?')
-                        url = 'https://google.nl/maps/place/' + location + '/&amp;'
-                        webbrowser.get().open(url)
-                        nat_voice('Here is ' + location)
-                if 'what is the time' in voice_data:
-                        nat_voice("The time is :" + ctime()[11:19])
+                if voice_data:
+                        response = chat(voice_data)
+                        nat_voice(response)
+##                if 'hello' in voice_data or 'hi' in voice_data:
+##                        nat_voice('hi, there')
+##                if 'who are you' in voice_data or 'name' in voice_data:
+##                        nat_voice('My name is Natasha ')
+##                if 'search' in voice_data:
+##                        search = record_audio('What do you want to search?')
+##                        if search is not None:
+##                                url = 'https://google.com/search?q=' + search
+##                                webbrowser.get().open(url)
+##                                nat_voice('Here is what i found on google for ' + search)
+##                        else:
+##                                record_audio("Try Again")
+##                if 'location' in voice_data:
+##                        location = record_audio('What\'s the location to find?')
+##                        url = 'https://google.nl/maps/place/' + location + '/&amp;'
+##                        webbrowser.get().open(url)
+##                        nat_voice('Here is ' + location)
+##                if 'what is the time' in voice_data:
+##                        nat_voice("The time is :" + ctime()[11:19])
                 if 'bye' in voice_data:
                         nat_voice('Ba-Bye, have a good day. ')
                         root.destroy()
@@ -196,3 +220,6 @@ while flag == 1:
         respond(voice_data)
 
 speaker.runAndWait()
+
+
+#CHATBOT
